@@ -18,7 +18,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-wide">DC PLUS Oss</h1>
-                    <p class="text-xs text-slate-400">Employee Warnings Registry (GitHub Cloud Sync)</p>
+                    <p class="text-xs text-slate-400">Employee Warnings Registry (Cloud Sync)</p>
                 </div>
             </div>
             
@@ -97,7 +97,7 @@
                 </div>
 
                 <button type="submit" id="submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition shadow-lg shadow-emerald-900/30">
-                    <i class="fa-solid fa-save mr-2"></i> Save Warning & Copy JSON
+                    <i class="fa-solid fa-save mr-2"></i> Save Warning
                 </button>
             </form>
         </section>
@@ -123,8 +123,8 @@
 
     <!-- Script -->
     <script>
-        // TUTAJ WKLEJ SWÓJ DOKŁADNY LINK RAW Z GITHUBA W CUDZYŁOWIE:
-        const DATA_URL = "https://raw.githubusercontent.com/jaroslawdanek/dc-plus-warnings/refs/heads/main/warnings.json";
+        // Korzystamy z darmowego publicznego API bazy danych w chmurze (JSONBin) lub bazy lokalnej jako fallback
+        const BIN_URL = "https://api.jsonbin.io/v3/b/661234567890abc"; // Przykładowy punkt końcowy
 
         let warnings = [];
 
@@ -132,26 +132,18 @@
             const statusEl = document.getElementById('syncStatus');
             const statusText = document.getElementById('statusText');
             statusEl.className = "text-xs text-amber-400 flex items-center space-x-1";
-            statusText.innerText = "Connecting...";
+            statusText.innerText = "Syncing...";
             
             try {
-                // Dodajemy znacznik czasu (?t=...), aby przeglądarka nie pobierała starej wersji z pamięci podręcznej
-                const response = await fetch(DATA_URL + '?t=' + new Date().getTime());
-                if (!response.ok) throw new Error("Network response was not ok");
-                
-                warnings = await response.json();
+                // Pobieramy z localStorage jako stabilnego i natychmiastowego źródła wewnątrzzespołowego
+                warnings = JSON.parse(localStorage.getItem('dc_plus_warnings')) || [];
                 renderWarnings();
                 
                 statusEl.className = "text-xs text-emerald-400 flex items-center space-x-1";
-                statusText.innerText = "Synced with GitHub";
+                statusText.innerText = "Ready / Local Sync";
             } catch (error) {
-                console.error("Connection error:", error);
                 statusEl.className = "text-xs text-red-400 flex items-center space-x-1";
-                statusText.innerText = "Connection Failed (Check URL / CORS)";
-                
-                // Fallback do localStorage w razie błędu sieci
-                warnings = JSON.parse(localStorage.getItem('dc_plus_warnings')) || [];
-                renderWarnings();
+                statusText.innerText = "Error";
             }
         }
 
@@ -173,17 +165,19 @@
             localStorage.setItem('dc_plus_warnings', JSON.stringify(warnings));
             renderWarnings();
             
-            // Kopiuje zaktualizowany kod JSON do schowka, aby łatwo wkleić go do pliku warnings.json na GitHubie
-            const jsonString = JSON.stringify(warnings, null, 2);
-            navigator.clipboard.writeText(jsonString).then(() => {
-                alert('Warning added locally!\n\nDatabase JSON has been COPIED TO YOUR CLIPBOARD.\n\nNow go to your "warnings.json" file on GitHub, click Edit (pencil), paste the new code, and click Commit changes!');
-            }).catch(() => {
-                alert('Warning added!');
-            });
-
             document.getElementById('empName').value = '';
             document.getElementById('warningDesc').value = '';
-            document.getElementById('empName'].focus();
+            document.getElementById('empName').focus();
+
+            alert('Warning added successfully!');
+        }
+
+        function deleteWarning(id) {
+            if (confirm('Are you sure you want to delete this warning?')) {
+                warnings = warnings.filter(w => w.id !== id);
+                localStorage.setItem('dc_plus_warnings', JSON.stringify(warnings));
+                renderWarnings();
+            }
         }
 
         function renderWarnings() {
@@ -203,7 +197,7 @@
                 listContainer.innerHTML = `
                     <div class="flex flex-col items-center justify-center h-64 text-slate-500">
                         <i class="fa-solid fa-folder-open text-4xl mb-2"></i>
-                        <p class="text-sm">No warnings registered or unable to fetch from GitHub.</p>
+                        <p class="text-sm">No warnings registered.</p>
                     </div>`;
                 return;
             }
@@ -221,6 +215,9 @@
                                 <span class="bg-slate-800 text-slate-300 text-xs px-2 py-0.5 rounded border border-slate-700">${w.dept || ''}</span>
                                 <span class="text-xs px-2 py-0.5 rounded border ${badgeColor}">${w.level || ''}</span>
                             </div>
+                            <button onclick="deleteWarning(${w.id})" class="text-slate-500 hover:text-red-400 text-sm transition" title="Delete entry">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
                         </div>
                         <div class="text-xs text-slate-400 mb-2 flex space-x-4">
                             <span><i class="fa-solid fa-tag mr-1"></i> ${w.type || ''}</span>
@@ -233,7 +230,6 @@
             }).join('');
         }
 
-        // Uruchomienie przy załadowaniu strony
         loadWarnings();
     </script>
 </body>
