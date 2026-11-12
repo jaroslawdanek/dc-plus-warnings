@@ -130,12 +130,10 @@
     </main>
 
     <!-- Script -->
+    <!-- Script -->
     <script>
-        // GitHub repository raw file URL for reading data
-        // Zastąp "TwojaNazwaUzytkownika" oraz "dc-plus-warnings" swoimi danymi z Githuba po utworzeniu repozytorium!
-        const GITHUB_USER = "TwojaNazwaUzytkownika";
-        const GITHUB_REPO = "dc-plus-warnings";
-        const DATA_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/warnings.json`;
+        // WKLEJ TUTAJ BEZPOŚREDNI LINK DO PLIKU RAW Z GITHUB-A
+        const DATA_URL = "https://raw.githubusercontent.com/TwojaNazwaUzytkownika/dc-plus-warnings/main/warnings.json";
 
         let warnings = [];
 
@@ -144,7 +142,8 @@
             statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-amber-400"></i> <span class="text-amber-400">Loading...</span>';
             
             try {
-                const response = await fetch(DATA_URL + '?t=' + new Date().getTime()); // cache busting
+                // Dodajemy unikalny znacznik czasu (?t=...), żeby przeglądarka nie pobierała starej wersji z pamięci podręcznej
+                const response = await fetch(DATA_URL + '?t=' + new Date().getTime()); 
                 if (!response.ok) throw new Error("Could not load data");
                 warnings = await response.json();
                 renderWarnings();
@@ -152,7 +151,6 @@
             } catch (error) {
                 console.error("Load error:", error);
                 statusEl.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-400"></i> <span class="text-red-400">Offline mode</span>';
-                // Fallback do localStorage jeśli brak sieci
                 warnings = JSON.parse(localStorage.getItem('dc_plus_warnings')) || [];
                 renderWarnings();
             }
@@ -177,11 +175,11 @@
             // Zapisz lokalnie jako backup
             localStorage.setItem('dc_plus_warnings', JSON.stringify(warnings));
             
-            // Wyświetl instrukcję jak zaktualizować plik JSON na GitHubie lub skopiuj do schowka
+            // Kopiuj JSON do schowka, aby łatwo zaktualizować plik na GitHubie
             const jsonString = JSON.stringify(warnings, null, 2);
             
             navigator.clipboard.writeText(jsonString).then(() => {
-                alert('Warning added successfully! \n\nBecause GitHub requires a token for direct automated writes, the updated database JSON has been COPIED TO YOUR CLIPBOARD.\n\nSimply go to your warnings.json file on GitHub, click Edit (pencil icon), paste this new data, and click Commit changes!');
+                alert('Warning added! \n\nThe updated database JSON has been COPIED TO YOUR CLIPBOARD.\n\nGo to your warnings.json file on GitHub, click Edit (pencil), paste the new code, and click Commit changes!');
             }).catch(() => {
                 alert('Warning added locally!');
             });
@@ -243,5 +241,3 @@
 
         loadWarnings();
     </script>
-</body>
-</html>
