@@ -1,7 +1,141 @@
-<!-- Script -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DC PLUS Oss - Employee Warnings Registry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+
+    <!-- Navbar -->
+    <header class="bg-slate-800 border-b border-slate-700 p-4 shadow-md">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-red-600 text-white p-2 rounded-lg font-bold">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">DC PLUS Oss</h1>
+                    <p class="text-xs text-slate-400">Employee Warnings Registry (GitHub Synchronized)</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span id="syncStatus" class="text-xs text-amber-400 flex items-center space-x-1">
+                    <i class="fa-solid fa-spinner fa-spin"></i> <span>Connecting...</span>
+                </span>
+                <button onclick="loadWarnings()" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-2 rounded-md font-medium transition flex items-center space-x-1">
+                    <i class="fa-solid fa-sync"></i> <span>Refresh</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Column: Form -->
+        <section class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg lg:col-span-1 h-fit">
+            <h2 class="text-lg font-semibold mb-4 flex items-center space-x-2 text-emerald-400">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Issue New Warning</span>
+            </h2>
+
+            <form id="warningForm" onsubmit="addWarning(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Employee Name</label>
+                    <input type="text" id="empName" required placeholder="e.g. John Smith" 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Department</label>
+                        <select id="empDept" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+                            <option value="CPS">CPS</option>
+                            <option value="AIO">AIO</option>
+                            <option value="OPM">OPM</option>
+                            <option value="RPK">RPK</option>
+                            <option value="Outbound">Outbound</option>
+                            <option value="Loading">Loading</option>
+                            <option value="Emballage">Emballage</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Violation Type</label>
+                        <select id="warningType" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+                            <option value="BHP">H&S / Safety</option>
+                            <option value="Quality">Quality / Errors</option>
+                            <option value="Performance">Performance / Norms</option>
+                            <option value="Lateness">Lateness / Absence</option>
+                            <option value="Procedure">Procedure Breach</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Warning Level</label>
+                    <select id="warningLevel" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+                        <option value="Info" class="text-blue-400">Oral Warning / Remark</option>
+                        <option value="Warning" class="text-amber-400">Official Warning (1st Degree)</option>
+                        <option value="Critical" class="text-red-400">Final / Disciplinary Warning</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Incident Details / Description</label>
+                    <textarea id="warningDesc" rows="3" required placeholder="Describe the situation, date, time..." 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Issued By (Shift Leader)</label>
+                    <input type="text" id="shiftLeader" placeholder="Your name" required
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 text-xs text-slate-400">
+                    <i class="fa-solid fa-circle-info text-blue-400 mr-1"></i> Note: To save entries directly to GitHub storage, a free GitHub Personal Access Token is required in settings. (Or use local export/import).
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition shadow-lg shadow-emerald-900/30">
+                    <i class="fa-solid fa-save mr-2"></i> Save Warning
+                </button>
+            </form>
+        </section>
+
+        <!-- Right Column: List -->
+        <section class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg lg:col-span-2 flex flex-col h-[750px]">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+                <h2 class="text-lg font-semibold flex items-center space-x-2 text-slate-200">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span>Warnings Registry (<span id="totalCount">0</span>)</span>
+                </h2>
+                
+                <div class="w-full md:w-72">
+                    <input type="text" id="searchInput" onkeyup="renderWarnings()" placeholder="Search employee or department..." 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div id="warningsList" class="overflow-y-auto flex-1 space-y-3 pr-1">
+                <div class="flex flex-col items-center justify-center h-64 text-slate-500">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl mb-2"></i>
+                    <p class="text-sm">Loading data...</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Script -->
     <script>
-        // WKLEJ TUTAJ BEZPOŚREDNI LINK DO PLIKU RAW Z GITHUB-A
-        const DATA_URL = "https://raw.githubusercontent.com/jaroslawdanek/dc-plus-warnings/refs/heads/main/warnings.json";
+        // GitHub repository raw file URL for reading data
+        // Zastąp "TwojaNazwaUzytkownika" oraz "dc-plus-warnings" swoimi danymi z Githuba po utworzeniu repozytorium!
+        const GITHUB_USER = "TwojaNazwaUzytkownika";
+        const GITHUB_REPO = "dc-plus-warnings";
+        const DATA_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/warnings.json`;
 
         let warnings = [];
 
@@ -10,8 +144,7 @@
             statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-amber-400"></i> <span class="text-amber-400">Loading...</span>';
             
             try {
-                // Dodajemy unikalny znacznik czasu (?t=...), żeby przeglądarka nie pobierała starej wersji z pamięci podręcznej
-                const response = await fetch(DATA_URL + '?t=' + new Date().getTime()); 
+                const response = await fetch(DATA_URL + '?t=' + new Date().getTime()); // cache busting
                 if (!response.ok) throw new Error("Could not load data");
                 warnings = await response.json();
                 renderWarnings();
@@ -19,6 +152,7 @@
             } catch (error) {
                 console.error("Load error:", error);
                 statusEl.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-400"></i> <span class="text-red-400">Offline mode</span>';
+                // Fallback do localStorage jeśli brak sieci
                 warnings = JSON.parse(localStorage.getItem('dc_plus_warnings')) || [];
                 renderWarnings();
             }
@@ -43,11 +177,11 @@
             // Zapisz lokalnie jako backup
             localStorage.setItem('dc_plus_warnings', JSON.stringify(warnings));
             
-            // Kopiuj JSON do schowka, aby łatwo zaktualizować plik na GitHubie
+            // Wyświetl instrukcję jak zaktualizować plik JSON na GitHubie lub skopiuj do schowka
             const jsonString = JSON.stringify(warnings, null, 2);
             
             navigator.clipboard.writeText(jsonString).then(() => {
-                alert('Warning added! \n\nThe updated database JSON has been COPIED TO YOUR CLIPBOARD.\n\nGo to your warnings.json file on GitHub, click Edit (pencil), paste the new code, and click Commit changes!');
+                alert('Warning added successfully! \n\nBecause GitHub requires a token for direct automated writes, the updated database JSON has been COPIED TO YOUR CLIPBOARD.\n\nSimply go to your warnings.json file on GitHub, click Edit (pencil icon), paste this new data, and click Commit changes!');
             }).catch(() => {
                 alert('Warning added locally!');
             });
@@ -109,3 +243,5 @@
 
         loadWarnings();
     </script>
+</body>
+</html>
